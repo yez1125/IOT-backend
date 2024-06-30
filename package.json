@@ -1,0 +1,26 @@
+{
+  "name": "iot_monitor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm-run-all --parallel start-frontend start-backend start-data-acquisition",
+    "start-frontend": "cd client && npm start",
+    "start-backend": "cd server && node index.js",
+    "start-data-acquisition": "cd data_acquisition && python app.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dcde22345/IoT_monitor.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dcde22345/IoT_monitor/issues"
+  },
+  "homepage": "https://github.com/dcde22345/IoT_monitor#readme",
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "npm-run-all": "^4.1.5"
+  }
+}

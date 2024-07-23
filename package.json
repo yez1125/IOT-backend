@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm-run-all --parallel start-frontend start-backend start-data-acquisition",
+    "start": "npm-run-all --parallel start-frontend start-backend",
     "start-frontend": "cd client && npm start",
-    "start-backend": "cd server && node index.js",
-    "start-data-acquisition": "cd data_acquisition && python app.py"
+    "start-backend": "cd server && python index.py"
   },
   "repository": {
     "type": "git",

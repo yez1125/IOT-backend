@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 from sqlalchemy.sql import text, desc
+from flask_cors import CORS
 
 import os
 from dotenv import load_dotenv

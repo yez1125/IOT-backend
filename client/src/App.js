@@ -11,7 +11,7 @@ import { Container, Row, Col, Button } from "react-bootstrap";
 
 const App = () => {
   const [data, setData] = useState([]);
-  const address = 'http://localhost:3002'
+  const address = '//18.182.5.142:3002'
 
   // useEffect(() => {
   //   const fetchData = async () => {

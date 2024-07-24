@@ -1,17 +1,14 @@
-import 'bootstrap/dist/css/bootstrap.min.css'
-import './styles/App.css'
-
-import  {handleBtnClick, handleToggleClick}  from './Handlers';
+import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import "./App.css"
 
 import axios from "axios";
-import TemperatureChart from "./component/TemperatureChart";
-import HumidityChart from "./component/HumidityChart";
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button } from "react-bootstrap";
+import { Container, Row, Col, Button, Navbar, Nav } from "react-bootstrap";
+import {NavbarComponent, TemperatureChart, HumidityChart, Infomation, ABoxSwitch} from './component/components';
 
 const App = () => {
   const [data, setData] = useState([]);
-  const address = '//18.182.5.142:3002'
+  const address = "//18.182.5.142:3002";
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -29,16 +26,17 @@ const App = () => {
   //   return () => clearInterval(interval);
   // }, []);
 
-
-
   return (
-    <div className="App d-flex justify-content-center align-items-center">
-      <Container>
-        <h1 className='text-center p-3 display-4 fw-bold'>Sensor Monitor</h1>
-        <Button id='contral-btn' onClick={() => handleBtnClick(address)}>近一分鐘Data</Button>
-        <Button id='contral-btn' onClick={() => handleToggleClick(address)}>Toggle</Button>
+    <>
+      <NavbarComponent />
+      <div className="App d-flex justify-content-center align-items-center">
+        <Container>
+          <Container className='wrap d-flex justify-content-center align-items-center w-100'>
+            <ABoxSwitch />
+          </Container>
+          <Infomation />
 
-        {/* <Row className='mt-5'>
+          {/* <Row className='mt-5'>
           <Col xs='12' sm='6'>
             <h2 className='m-3 text-center display-6 fw-bold'>溫度</h2>
             <TemperatureChart data={data} />
@@ -48,8 +46,9 @@ const App = () => {
             <HumidityChart data={data} />
           </Col>
         </Row> */}
-      </Container>
-    </div>
+        </Container>
+      </div>
+    </>
   );
 };
 

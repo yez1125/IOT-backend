@@ -1,0 +1,24 @@
+.circle-button {
+  width: 75%; /* 設置按鈕的寬度 */
+  aspect-ratio: 1 / 1; /* 設置按鈕的高度 */
+  background-color: red !important; /* 設置背景顏色 */
+  border: none; /* 去掉邊框 */
+  border-radius: 50%; /* 設置圓形邊框 */
+  font-size: 1.5em; /* 設置文字大小（可選） */
+  cursor: pointer; /* 設置滑鼠指標為指針 */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加內陰影 */
+  transition: box-shadow 0.3s ease-in-out, transform 0.5s ease-in-out,
+    background 0.3s ease-in-out;
+  transform: rotate(-45deg);
+}
+
+.circle-button-rotated {
+  transform: rotate(45deg);
+  background-color: green !important;
+}
+
+.line {
+  background-color: white;
+  width: 5px;
+  height: 50%;
+}

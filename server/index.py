@@ -25,14 +25,14 @@ switch = False #空氣清淨器開關
 
 # 建立初始化database model
 class data(db.Model):
-    __tablename__ = 'test_data'
+    __tablename__ = 'data'
     _id = db.Column('id', db.INTEGER, primary_key=True)
     temperature = db.Column('temperature', db.FLOAT)
     humidity = db.Column('humidity', db.FLOAT)
     tvoc = db.Column('TVOC', db.FLOAT)
     co2 = db.Column('CO2', db.FLOAT)
-    pm2_5 = db.Column('pm2.5', db.Float)
-    time = db.Column('timestamp_column', db.TIMESTAMP, server_default = text('CURRENT_TIMESTAMP'))
+    pm2_5 = db.Column('pm25', db.Float)
+    time = db.Column('time', db.TIMESTAMP, server_default = text('CURRENT_TIMESTAMP'))
     status = db.Column('status', db.BOOLEAN, default = False) # 開關機狀態
 
     def __init__(self, _id, temperature, humidity, tvoc, co2, pm2_5, time, status):

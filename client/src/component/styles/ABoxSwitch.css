@@ -1,5 +1,4 @@
 .circle-button {
-  width: 75%; /* 設置按鈕的寬度 */
   aspect-ratio: 1 / 1; /* 設置按鈕的高度 */
   background-color: red !important; /* 設置背景顏色 */
   border: none; /* 去掉邊框 */
@@ -21,4 +20,22 @@
   background-color: white;
   width: 5px;
   height: 50%;
+}
+
+.open{
+  position: absolute;
+  color: black(96, 26, 26);
+  top: 0;
+  right: 0;
+}
+
+.close{
+  position: absolute;
+  color: black  ;
+  top: 0;
+  left: 0;
+}
+
+.relative{
+  position: relative;
 }

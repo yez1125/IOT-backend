@@ -4,11 +4,11 @@ import "./App.css"
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Navbar, Nav } from "react-bootstrap";
-import {NavbarComponent, TemperatureChart, HumidityChart, Infomation, ABoxSwitch} from './component/components';
+import {NavbarComponent, TemperatureChart, HumidityChart, Infomation, ABoxSwitch, Footer} from './component/components';
 
 const App = () => {
   const [data, setData] = useState([]);
-  const address = "//18.182.5.142:3002";
+
 
   // useEffect(() => {
   //   const fetchData = async () => {
@@ -35,6 +35,7 @@ const App = () => {
             <ABoxSwitch />
           </Container>
           <Infomation />
+          <Footer />
 
           {/* <Row className='mt-5'>
           <Col xs='12' sm='6'>

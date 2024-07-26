@@ -16,6 +16,15 @@
   background-color: green !important;
 }
 
+/* disabled後讓顏色不會變淺色 */
+.circle-button:disabled {
+  opacity: 1; /* 禁用狀態下透明度變化 */
+}
+
+.circle-button-rotated:disabled {
+  opacity: 1; /* 禁用狀態下透明度變化 */
+}
+
 .line {
   background-color: white;
   width: 5px;

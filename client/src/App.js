@@ -6,6 +6,9 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Navbar, Nav } from "react-bootstrap";
 import {NavbarComponent, TemperatureChart, HumidityChart, Infomation, ABoxSwitch, Footer} from './component/components';
 
+// ------測試用-------
+import fetchApi from './component/fetchApi'
+// ------------------
 const App = () => {
   const [data, setData] = useState([]);
 
@@ -36,7 +39,6 @@ const App = () => {
           </Container>
           <Infomation />
           <Footer />
-
           {/* <Row className='mt-5'>
           <Col xs='12' sm='6'>
             <h2 className='m-3 text-center display-6 fw-bold'>溫度</h2>
@@ -47,6 +49,7 @@ const App = () => {
             <HumidityChart data={data} />
           </Col>
         </Row> */}
+        <Button onClick={() => {}}>測試按鈕</Button>
         </Container>
       </div>
     </>

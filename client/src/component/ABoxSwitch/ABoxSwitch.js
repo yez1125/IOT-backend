@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
-import axios from "axios";
-import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
-import fetchApi from "./fetchApi";
-import "./styles/ABoxSwitch.css";
+import "../../../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import {fetchGetApi} from "../components";
+import "./ABoxSwitch.css";
 
 const ABoxSwitch = ({ address }) => {
   const elementRef = useRef(null);
@@ -35,10 +34,10 @@ const ABoxSwitch = ({ address }) => {
     setDisable(true);
 
     // 執行toggle_status
-    await fetchApi("/api/toggle_status");
+    await fetchGetApi("/api/toggle_status");
 
     // 讀取目前最新一筆record的status
-    const res = await fetchApi("/api/get_status");
+    const res = await fetchGetApi("/api/get_status");
     const status = res.data.status;
 
     change_btn_status(status);
@@ -52,7 +51,7 @@ const ABoxSwitch = ({ address }) => {
   // 當網頁第一次渲染過後，執行一次
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetchApi("/api/get_status");
+      const res = await fetchGetApi("/api/get_status");
       const status = res.data.status;
       change_btn_status(status);
     };

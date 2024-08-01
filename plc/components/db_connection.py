@@ -1,6 +1,8 @@
 import pymysql
+attributes = ['id' ,'temperature', 'humidity', "tvoc", "co2", "pm25", "time", "status"]
 
 class MySQL:
+
     def __init__(self, host='localhost', port=3306, user='root', passwd='root', db='plc'):
         self.host = host
         self.port = port
@@ -33,11 +35,11 @@ class MySQL:
         except Exception as e:
             print("Error: " + str(e))
 
-    def add(self, temperature, humidity, status):
-        query_template = "INSERT INTO data (temperature, humidity, status) VALUES ({}, {}, {})"
+    def add(self, temperature, humidity, tvoc, co2, pm25, status):
+        query_template = "INSERT INTO data (temperature, humidity, tvoc, co2, pm25, status) VALUES ({}, {}, {}, {}, {}, {})"
         
         with self.database.cursor() as cursor:
-            query = query_template.format(str(temperature), str(humidity), str(status))
+            query = query_template.format(str(temperature), str(humidity), str(tvoc), str(co2), str(pm25), str(status))
             cursor.execute(query)
 
     def is_status_changed(self):
@@ -50,15 +52,18 @@ class MySQL:
             new_record = result[0]
             last_record = result [1]
 
-        new_status = new_record[4]
-        last_status = last_record[4]
+        new_status = new_record[attributes.index('status')]
+        last_status = last_record[attributes.index('status')]
         
         return (new_status != last_status)
     
-    def get_data(self):
+    # 獲取資料庫最新的狀態
+    def get_status(self):
         with self.database.cursor() as cursor:
             query = "SELECT * FROM data ORDER BY time DESC LIMIT 1"
             cursor.execute(query)
-            result = cursor.fetchall()
-            record = result[0]
-            return record
+        
+            status = cursor.fetchone()[attributes.index('status')]
+
+            print(status)
+            return status

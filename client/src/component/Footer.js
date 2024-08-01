@@ -1,20 +1,19 @@
 import React from "react";
 import { Container, Navbar, Nav } from "react-bootstrap";
-import axios from 'axios'
-import fetchApi from "./fetchApi"
+import {fetchGetApi} from "./components"
 import "../../node_modules/bootstrap/dist/css/bootstrap.min.css";
 
 const Footer = () => {
 
   const handleHistoryClick = () => {
-    const res = fetchApi('/api/add_new')
+    const res = fetchGetApi('/api/add_new')
     console.log(res)
   }
+
   return (
-    <div className="fixed-bottom">
-      <Nav variant="underline justify-content-around" defaultActiveKey="/home">
+      <Nav className="fixed-bottom" variant="underline justify-content-around" defaultActiveKey="/">
         <Nav.Item>
-          <Nav.Link eventKey="link-2" className='p-1'>
+          <Nav.Link className='p-1' href="/">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="30"
@@ -32,13 +31,12 @@ const Footer = () => {
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="link-1">監控</Nav.Link>
+          <Nav.Link >監控</Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link eventKey="link-3">歷史紀錄</Nav.Link>
+          <Nav.Link >歷史紀錄</Nav.Link>
         </Nav.Item>
       </Nav>
-    </div>
   );
 };
 

@@ -22,21 +22,61 @@ class PLCConnection:
         if self.connection:
         # 每秒抓取PLC資料，並傳送到database
             try:
-                temperature = self.client.read_holding_registers(address=4120, count=4, slave=1).registers[0] * 0.1
-                humidity = self.client.read_holding_registers(address=4118, count=1, slave=1).registers[0] * 0.1    
+                values = self.client.read_holding_registers(address=4104, count=21, slave=1).registers
                 
+                # 將對應的兩個modbus code轉換回hex合起來並取[2:]，在轉換回int
+                # temperature / 10
+                temperature = int(hex(values[3])[2:] + hex(values[4])[2:], 16) / 10
+
+                # humidity / 10
+                humidity = int(hex(values[5])[2:] + hex(values[6])[2:], 16) / 10
+
+                # pm2.5
+                pm25 = int(hex(values[7])[2:] + hex(values[8])[2:], 16)
+                
+                # pm10
+                pm10 = int(hex(values[9])[2:] + hex(values[10])[2:], 16)
+
+                # pm2.5 average in one hour
+                pm25_average_in_one_hour = int(hex(values[11])[2:] + hex(values[12])[2:], 16)
+                
+                # pm10 average in one hour
+                pm10_average_in_one_hour = int(hex(values[13])[2:] + hex(values[14])[2:], 16)
+
+                # co2
+                co2 = int(hex(values[15])[2:] + hex(values[16])[2:], 16)
+                
+                # tvoc / 1000
+                tvoc = int(hex(values[17])[2:] + hex(values[18])[2:], 16) / 1000
+
             except ModbusException as e:
                 print('Error: ' + e)
 
-            print("溫度：" + str(round(temperature, 2)))
-            print("濕度：" + str(round(humidity, 2)))
+            print(f"""
+temperature: {temperature}
+humidity: {humidity}
+pm2.5: {pm25}
+pm10: {pm10}
+pm2.5 average in one hour: {pm25_average_in_one_hour}
+pm10 average in one hour: {pm10_average_in_one_hour}
+co2: {co2}
+tvoc: {tvoc}
+""")
 
-            return temperature, humidity
+            return values
 
-    def change_output(self, status):
+    def open(self):
         # 如果status改變，則將Y0的狀態改變
-        self.client.write_coil(address=1280, value=status, slave=1)
+        self.client.write_coil(address=1280, value=True, slave=1)
 
     def close(self):
-        self.client.close()
-        print("PLC關閉連接")
+        self.client.write_coil(address=1280, value=False, slave=1)
+
+    def test_data(self, address):
+        if self.connection:
+            try:
+                data = self.client.read_holding_registers(address=address, count=1, slave=1).registers[0]
+            except ModbusException as e:
+                print('Error: ' + e)
+
+            return data

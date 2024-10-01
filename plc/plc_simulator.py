@@ -3,11 +3,11 @@ import random
 import time
 
 db_info = {
-    'host': 'localhost', 
+    'host': '172.24.100.103', 
     'port': 3306,
-    'user':'root', 
-    'passwd':'root', 
-    'db':'plc'
+    'user':'dcde22345', 
+    'passwd':'Zxcn-1357', 
+    'db':'data'
 }
 
 
@@ -16,30 +16,30 @@ def main():
     # 資料庫連線
     db.connect()
     
-    # PLC連線
-    while True:
-        # 獲取PLC資料
-        temperature = random.uniform(25, 30)
-        humidity = random.uniform(40, 60)
-        tvoc = random.randint(0, 56) * 0.01
-        co2 = random.randint(300, 1000)
-        pm25 = random.randint(0, 35)
+    # # PLC連線
+    # while True:
+    #     # 獲取PLC資料
+    #     temperature = random.uniform(25, 30)
+    #     humidity = random.uniform(40, 60)
+    #     tvoc = random.randint(0, 56) * 0.01
+    #     co2 = random.randint(300, 1000)
+    #     pm25 = random.randint(0, 35)
         
-        # 讀取db的status
-        status = db.get_status()
+    #     # 讀取db的status
+    #     status = db.get_status()
 
-        # 若db的status改變，則plc的output也改變的跟status一樣
-        # if db.is_status_changed():
-        #     print("changed!")
+    #     # 若db的status改變，則plc的output也改變的跟status一樣
+    #     # if db.is_status_changed():
+    #     #     print("changed!")
 
-        # 將資料傳入資料庫
-        db.add(temperature, humidity, tvoc, co2, pm25, status)
+    #     # 將資料傳入資料庫
+    #     db.add(temperature, humidity, tvoc, co2, pm25, status)
 
-        time.sleep(1)
+    #     time.sleep(1)
 
     # 關閉PLC、資料庫連線
     db.close()
-    plc.close()
+    # plc.close()
 
 if __name__ == '__main__':
     main()

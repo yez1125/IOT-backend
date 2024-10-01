@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const hostAddress = 'http://localhost:3002'
+const hostAddress = 'https://182a-2402-7500-92c-3818-8c46-b926-4e5a-c487.ngrok-free.app'
 
 const fetchGetApi = async (api_address) => {
     try {

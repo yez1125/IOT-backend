@@ -3,6 +3,9 @@ from components.plc_connection import PLCConnection
 from pymodbus.transaction import ModbusAsciiFramer
 import time
 
+# 測試用
+import random
+
 db_info = {
     'host': 'localhost', 
     'port': 3306,
@@ -13,7 +16,7 @@ db_info = {
 
 plc_info = {
     'framer': ModbusAsciiFramer,
-    'port' : "COM7", 
+    'port' : "COM5", 
     "stopbits": 1,
     'bytesize': 7,
     'parity': "E",
@@ -31,7 +34,12 @@ def main():
 
     while True:
         # 獲取PLC資料
-        temperature, humidity = plc.get_data()    
+        temperature, humidity = plc.get_data()
+
+        # 測試用
+        tvoc = random.randint(0, 56) * 0.01
+        co2 = random.randint(300, 1000)
+        pm25 = random.randint(0, 35)
         
         # 讀取db的status
         status = db.get_status()
@@ -41,7 +49,7 @@ def main():
             plc.change_output(status)
 
         # 將資料傳入資料庫
-        db.add(temperature, humidity, status)
+        db.add(temperature, humidity, tvoc, co2, pm25, status)
 
         time.sleep(1)
 

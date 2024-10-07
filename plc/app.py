@@ -34,12 +34,7 @@ def main():
 
     while True:
         # 獲取PLC資料
-        temperature, humidity = plc.get_data()
-
-        # 測試用
-        tvoc = random.randint(0, 56) * 0.01
-        co2 = random.randint(300, 1000)
-        pm25 = random.randint(0, 35)
+        temperature, humidity, pm25, pm10, pm25_average_in_one_hour, pm10_average_in_one_hour, co2, tvoc = plc.get_data()
         
         # 讀取db的status
         status = db.get_status()

@@ -63,8 +63,13 @@ co2: {co2}
 tvoc: {tvoc}
 """)
 
-            return values
+            return temperature, humidity, pm25, pm10, pm25_average_in_one_hour, pm10_average_in_one_hour, co2, tvoc
 
+    def change_output(self):
+        status = self.client.read_coils(address=1280, count=1, slave=1)
+        print(status)
+        
+    
     def open(self):
         # 如果status改變，則將Y0的狀態改變
         self.client.write_coil(address=1280, value=True, slave=1)

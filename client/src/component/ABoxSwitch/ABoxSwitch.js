@@ -54,7 +54,6 @@ const ABoxSwitch = ({ address }) => {
 
 
   // 當網頁第一次渲染過後，執行一次
-<<<<<<< HEAD
   // useEffect(() => {
   //   const fetchData = async () => {
   //     const res = await fetchGetApi("/api/get_status");
@@ -63,24 +62,18 @@ const ABoxSwitch = ({ address }) => {
   //   };
   //   fetchData();
   // }, []);
-=======
-  useEffect(async () => {
-    const res = await fetchGetApi("/api/get_status");
-    const dbStatus = res.data.status;
-    change_btn_status(dbStatus);
-  }, []);
->>>>>>> 3f5f078f2744497b913b9e2306e6fc5883c530b4
+
 
   return (
     <div className="w-75 relative">
-      <Button
+      <button
         ref={elementRef}
         onClick={handleBtnClick}
         className="p-0 d-flex justify-content-center align-items-start circle-button w-100"
         disabled={isDisabled}
       >
         <div className="line"></div>
-      </Button>
+      </button>
       <span className="open">ON</span>
       <span className="close">OFF</span>
     </div>

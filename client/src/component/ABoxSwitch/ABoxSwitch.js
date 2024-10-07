@@ -49,14 +49,14 @@ const ABoxSwitch = ({ address }) => {
 
 
   // 當網頁第一次渲染過後，執行一次
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetchGetApi("/api/get_status");
-      const status = res.data.status;
-      change_btn_status(status);
-    };
-    fetchData();
-  }, []);
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const res = await fetchGetApi("/api/get_status");
+  //     const status = res.data.status;
+  //     change_btn_status(status);
+  //   };
+  //   fetchData();
+  // }, []);
 
   return (
     <div className="w-75 relative">

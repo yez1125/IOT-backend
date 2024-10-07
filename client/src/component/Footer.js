@@ -31,10 +31,7 @@ const Footer = () => {
           </Nav.Link>
         </Nav.Item>
         <Nav.Item>
-          <Nav.Link >監控</Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Nav.Link >歷史紀錄</Nav.Link>
+          <Nav.Link to='/test'>監控</Nav.Link>
         </Nav.Item>
       </Nav>
   );

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Footer } from "./component/components";
-import {Home} from './pages/Pages'
+import {Home, Test} from './pages/Pages'
 
 const App = () => {
   const [data, setData] = useState([]);
@@ -14,6 +14,7 @@ const App = () => {
       <Footer />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path='/test' element={<Test/>} />
       </Routes>
     </BrowserRouter>
   );

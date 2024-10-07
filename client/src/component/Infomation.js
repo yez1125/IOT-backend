@@ -25,19 +25,27 @@ const Column = ({ type, amount, unit }) => {
 };
 
 const Infomation = () => {
-  const [amounts, setAmounts] = useState([])
+  const [amounts, setAmounts] = useState([27, 40, 70, 300, 700])
 
   const get_instant_data = async () => {
-    const res = await fetchGetApi('/api/get_instant_data')
-    const data = res.data
+    // const res = await fetchGetApi('/api/get_instant_data')
+    // const data = res.data
+
+    const data = {
+      temperature: 27,
+      humidity:40,
+      tvoc: 70,
+      pm25: 300,
+      co2:700
+    }
     setAmounts([data.temperature, data.humidity, data.tvoc, data.pm25, data.co2])
     
   }
   
-  useEffect(() => {
-    const interval = setInterval(get_instant_data, 1000)
-    return () => clearInterval(interval)
-  }, []);
+  // useEffect(() => {
+  //   const interval = setInterval(get_instant_data, 1000)
+  //   return () => clearInterval(interval)
+  // }, []);
 
   return (
     <Container>

@@ -3,7 +3,7 @@ attributes = ['id' ,'temperature', 'humidity', "tvoc", "co2", "pm25", "time", "s
 
 class MySQL:
 
-    def __init__(self, host='localhost', port=3306, user='root', passwd='root', db='plc'):
+    def __init__(self, host='localhost', port=3306, user='root', passwd='root', db='sensor_data'):
         self.host = host
         self.port = port
         self.user = user
@@ -35,35 +35,35 @@ class MySQL:
         except Exception as e:
             print("Error: " + str(e))
 
-    def add(self, temperature, humidity, tvoc, co2, pm25, status):
-        query_template = "INSERT INTO data (temperature, humidity, tvoc, co2, pm25, status) VALUES ({}, {}, {}, {}, {}, {})"
+    def insert(self, temperature, humidity, tvoc, co2, pm25, status):
+        query_template = "INSERT INTO data (temperature, humidity, ) VALUES ({}, {}, {}, {}, {}, {})"
         
         with self.database.cursor() as cursor:
             query = query_template.format(str(temperature), str(humidity), str(tvoc), str(co2), str(pm25), str(status))
             cursor.execute(query)
 
-    def is_status_changed(self):
-        new_record = None
-        last_record = None
-        with self.database.cursor() as cursor:
-            query = "SELECT * FROM data ORDER BY time DESC LIMIT 2"
-            cursor.execute(query)
-            result = cursor.fetchall()
-            new_record = result[0]
-            last_record = result [1]
+    # def is_status_changed(self):
+    #     new_record = None
+    #     last_record = None
+    #     with self.database.cursor() as cursor:
+    #         query = "SELECT * FROM data ORDER BY time DESC LIMIT 2"
+    #         cursor.execute(query)
+    #         result = cursor.fetchall()
+    #         new_record = result[0]
+    #         last_record = result [1]
 
-        new_status = new_record[attributes.index('status')]
-        last_status = last_record[attributes.index('status')]
+    #     new_status = new_record[attributes.index('status')]
+    #     last_status = last_record[attributes.index('status')]
         
-        return (new_status != last_status)
+    #     return (new_status != last_status)
     
     # 獲取資料庫最新的狀態
-    def get_status(self):
-        with self.database.cursor() as cursor:
-            query = "SELECT * FROM data ORDER BY time DESC LIMIT 1"
-            cursor.execute(query)
+    # def get_status(self):
+    #     with self.database.cursor() as cursor:
+    #         query = "SELECT * FROM data ORDER BY time DESC LIMIT 1"
+    #         cursor.execute(query)
         
-            status = cursor.fetchone()[attributes.index('status')]
+    #         status = cursor.fetchone()[attributes.index('status')]
 
-            print(status)
-            return status
+    #         print(status)
+    #         return status

@@ -14,6 +14,7 @@ db_info = {
     'db':'plc'
 }
 
+
 plc_info = {
     'framer': ModbusAsciiFramer,
     'port' : "COM5", 

@@ -1,18 +1,22 @@
 from ..config.db import get_db_connection
 
-class PLC:
-    def __init__(self, user_id):
-        self.user_id = user_id
+class Abox:
+    def __init__(self, plc_id, plc_output, abox_status):
+        self.plc_id = plc_id
+        self.plc_output = plc_output
+        self.abox_status = abox_status
 
     def save(self):
         connection = get_db_connection()
         try:
             with connection.cursor() as cursor:
                 # 做正規化表示
-                query = "INSERT INTO plc (user_id) VALUES (%s)"
+                query = "INSERT INTO abox (plc_id, plc_output, abox_status) VALUES (%s, %s, %s)"
 
                 cursor.execute(query, (
-                    self.userid
+                    self.plc_id,
+                    self.plc_output,
+                    self.abox_status
                 ))
             connection.commit()
             return self

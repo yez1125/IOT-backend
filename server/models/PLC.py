@@ -1,8 +1,8 @@
 from ..config.db import get_db_connection
 
-class User:
-    def __init__(self, username, email, password_hash, created_at=None):
-        self.username = username
+class PLC:
+    def __init__(self, user_id):
+        self.user_id = user_id
         self.email = email
         self.password_hash = password_hash
         self.created_at = created_at
@@ -28,21 +28,3 @@ class User:
             return None
         finally:
             connection.close()
-
-    @staticmethod
-    def find_by_username(username):
-        connection = get_db_connection()
-        try:
-            with connection.cursor() as cursor:
-                query = 'SELECT username FROM users WHERE username = %s'
-                cursor.execute(query, (username))
-                result = cursor.fetchone()
-                # user = User(result)
-                print()
-
-        except Exception as e:
-            print(f'Error: {e}')
-            return None
-        finally:
-            connection.close()                
-                

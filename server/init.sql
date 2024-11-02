@@ -1,11 +1,11 @@
-DROP DATABASE IF EXISTS sensor_data
+DROP DATABASE IF EXISTS IoT_Monitor;
 
-CREATE DATABASE sensor_data;
+CREATE DATABASE IoT_Monitor;
 
-USE sensor_data;
+USE IoT_Monitor;
 
 CREATE TABLE users (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -14,19 +14,20 @@ CREATE TABLE users (
 );
 
 CREATE TABLE plc(
-	id INT AUTO_INCREMENT,
+	plc_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT,
-    y0 FLOAT DEFAULT 0.0,
-    y1 FLOAT DEFAULT 0.0,
-    y2 FLOAT DEFAULT 0.0,
-    y3 FLOAT DEFAULT 0.0;
-    PRIMARY KEY (id, user_id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE sensor (
+    sensor_id INT PRIMARY KEY AUTO_INCREMENT,
+    plc_id INT,
+    FOREIGN KEY (plc_id) REFERENCES plc(plc_id)
 );
 
 CREATE TABLE data (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    plc_id INT,
+    time TIMESTAMP PRIMARY KEY DEFAULT CURRENT_TIMESTAMP,
+    sensor_id INT PRIMARY KEY,
     temperature FLOAT DEFAULT 0.0,
     humidity FLOAT DEFAULT 0.0,
     pm25 FLOAT DEFAULT 0.0,
@@ -35,6 +36,13 @@ CREATE TABLE data (
     pm10_average_in_one_hour FLOAT DEFAULT 0.0,
     tvoc FLOAT DEFAULT 0.0,
     co2 FLOAT DEFAULT 0.0,
-    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (plc_id) REFERENCES plc(id)
+    FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id)
+);
+
+CREATE TABLE abox(
+    abox_id INT PRIMARY KEY AUTO_INCREMENT,
+    plc_id INT PRIMARY KEY,
+    plc_output INT DEFAULT 0,
+    abox_status BOOLEAN DEFAULT 0,
+    FOREIGN KEY (plc_id) REFERENCES plc(plc_id)
 );

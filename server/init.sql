@@ -26,8 +26,8 @@ CREATE TABLE sensor (
 );
 
 CREATE TABLE data (
-    time TIMESTAMP PRIMARY KEY DEFAULT CURRENT_TIMESTAMP,
-    sensor_id INT PRIMARY KEY,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sensor_id INT,
     temperature FLOAT DEFAULT 0.0,
     humidity FLOAT DEFAULT 0.0,
     pm25 FLOAT DEFAULT 0.0,
@@ -36,13 +36,15 @@ CREATE TABLE data (
     pm10_average_in_one_hour FLOAT DEFAULT 0.0,
     tvoc FLOAT DEFAULT 0.0,
     co2 FLOAT DEFAULT 0.0,
+    PRIMARY KEY (time, sensor_id),
     FOREIGN KEY (sensor_id) REFERENCES sensor(sensor_id)
 );
 
 CREATE TABLE abox(
-    abox_id INT PRIMARY KEY AUTO_INCREMENT,
-    plc_id INT PRIMARY KEY,
+    abox_id INT AUTO_INCREMENT,
+    plc_id INT,
     plc_output INT DEFAULT 0,
     abox_status BOOLEAN DEFAULT 0,
+    PRIMARY KEY (abox_id, plc_id)
     FOREIGN KEY (plc_id) REFERENCES plc(plc_id)
 );

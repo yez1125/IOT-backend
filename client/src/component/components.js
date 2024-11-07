@@ -1,9 +1,11 @@
 import HumidityChart from "./HumidityChart"
 import TemperatureChart from "./TemperatureChart"
-import NavbarComponent from "./Navbar"
+import Header from "./Header"
 import Infomation from "./Infomation"
 import ABoxSwitch from './ABoxSwitch/ABoxSwitch'
-import Footer from "./Footer"
+import Navbar from "./Navbar"
 import { fetchGetApi, fetchPostApi } from "../services/fetchApi"
+import CostumButton from "./CostumButton"
 
-export {HumidityChart, TemperatureChart, NavbarComponent, Infomation, ABoxSwitch, Footer, fetchGetApi, fetchPostApi}
+
+export { CostumButton, HumidityChart, TemperatureChart, Header, Infomation, ABoxSwitch, Navbar, fetchGetApi, fetchPostApi}

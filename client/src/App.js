@@ -3,7 +3,7 @@ import "./styles/App.css";
 import React, { useState } from "react";
 
 import { BrowserRouter } from 'react-router-dom';
-import { Footer } from "./component/components";
+import { Header } from "./component/components";
 import Routers from "./routes/Routers";
 
 const App = () => {
@@ -11,7 +11,7 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <Footer />
+      <Header />
       <Routers />
     </BrowserRouter>
   );

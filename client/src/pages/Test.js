@@ -1,7 +1,7 @@
 // Test.js
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import { NavbarComponent } from "../component/components";
+import { Header } from "../component/components";
 
 // 模擬不同感測器的初始範圍
 const SENSOR_RANGES = {
@@ -110,7 +110,7 @@ const Test = () => {
 
     return (
         <>
-            <NavbarComponent />
+            <Header />
             <div className="container my-3">
                 <h1 className="text-center pb-3 fw-bold">即時監控</h1>
                 {[

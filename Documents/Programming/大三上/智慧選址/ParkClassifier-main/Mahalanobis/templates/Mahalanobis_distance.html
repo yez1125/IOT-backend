@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>馬氏距離預測系統</title>
+    <link rel="stylesheet" href="../static/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>評分系統</h1>
+      <p>上傳您的 EXCEL 檔案並查看模型預測結果</p>
+    </header>
+
+    <main>
+      <!-- 文件上傳區 -->
+      <section class="upload-section">
+        <h2>上傳檔案</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+          <div class="file-input-wrapper">
+            <label for="file" class="custom-file-button">選擇 EXCEL 檔案</label>
+            <input
+              type="file"
+              name="file"
+              id="file"
+              accept=".xlsx"
+              required
+              hidden
+            />
+            <span id="fileName" class="file-name">尚未選擇檔案</span>
+          </div>
+          <button
+            type="button"
+            id="predictButton"
+            class="submit-button"
+            disabled
+          >
+            提交
+          </button>
+        </form>
+      </section>
+
+      <!-- 預測結果展示區 -->
+      <section class="result-section">
+        <h2>預測結果</h2>
+        <div id="resultContainer" class="result-container"></div>
+      </section>
+    </main>
+
+    <script src="../static/scripts.js"></script>
+    <script src="../static/prediction.js"></script>
+  </body>
+</html>

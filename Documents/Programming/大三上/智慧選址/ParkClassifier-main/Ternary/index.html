@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>園區分類預測系統</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <h1>園區分類預測系統</h1>
+
+      <!-- 模型選擇 -->
+      <div class="model-selection">
+        <div class="model-option">
+          <input
+            type="radio"
+            id="ensemble_full"
+            name="model"
+            value="ensemble_full"
+            checked
+          />
+          <label for="ensemble_full">完整集成模型</label>
+          <p>結合隨機森林、XGBoost、SVM和邏輯回歸的集成模型</p>
+        </div>
+        <div class="model-option">
+          <input
+            type="radio"
+            id="ensemble_basic"
+            name="model"
+            value="ensemble_basic"
+          />
+          <label for="ensemble_basic">基礎集成模型</label>
+          <p>結合隨機森林、XGBoost和SVM的集成模型</p>
+        </div>
+        <div class="model-option">
+          <input type="radio" id="rf" name="model" value="rf" />
+          <label for="rf">隨機森林</label>
+          <p>使用多個決策樹進行分類的集成學習方法</p>
+        </div>
+        <div class="model-option">
+          <input type="radio" id="xgb" name="model" value="xgb" />
+          <label for="xgb">XGBoost</label>
+          <p>基於梯度提升的高效能機器學習算法</p>
+        </div>
+        <div class="model-option">
+          <input type="radio" id="svm" name="model" value="svm" />
+          <label for="svm">支持向量機</label>
+          <p>在高維空間中尋找最佳分類邊界的算法</p>
+        </div>
+        <div class="model-option">
+          <input type="radio" id="lr" name="model" value="lr" />
+          <label for="lr">邏輯回歸</label>
+          <p>基於概率的線性分類模型</p>
+        </div>
+      </div>
+
+      <!-- 特徵選擇 -->
+      <div id="featuresContainer"></div>
+
+      <!-- 文件上傳 -->
+      <div class="input-section">
+        <div class="file-input-wrapper">
+          <button class="custom-file-button">選擇檔案</button>
+          <input type="file" id="fileInput" accept=".xlsx,.xls" />
+          <span id="fileName">尚未選擇檔案</span>
+        </div>
+        <button id="predictButton" disabled>開始預測</button>
+      </div>
+
+      <!-- 結果顯示 -->
+      <div id="resultContainer"></div>
+    </div>
+
+    <!-- 引入 JavaScript 文件 -->
+    <script src="js/models.js"></script>
+    <script src="js/features.js"></script>
+    <script src="js/prediction.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

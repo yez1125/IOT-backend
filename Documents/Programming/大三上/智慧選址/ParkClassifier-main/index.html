@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="upgrade-insecure-requests"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>首頁 - 預測系統</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>預測系統首頁</h1>
+    </header>
+    <main>
+      <section>
+        <h2>選擇一個系統進行預測</h2>
+        <div class="system-links">
+          <a
+            href="Mahalanobis/templates/Mahalanobis_distance.html"
+            class="system-link"
+          >
+            評分系統
+          </a>
+          <a href="Ternary/index.html" class="system-link">
+            三元分類預測系統
+          </a>
+          <a href="Binary/index.html" class="system-link"> 二元分類預測系統 </a>
+        </div>
+      </section>
+    </main>
+    <style>
+      .system-links {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      }
+      .system-link {
+        margin: 10px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      .system-link:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </body>
+</html>

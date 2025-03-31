@@ -20,7 +20,19 @@ poetry env use python
 poetry install
 ```
 
-3. Add "poetry run" before your prompt
+3. Start the server
+
+a. dev mode
+
+```
+poetry run python run.py --dev
+```
+
+b. prod mode
+
+```
+poetry run python run.py --prod
+```
 
 ## Useful link
 

@@ -4,17 +4,22 @@ import os
 from pydantic import BaseModel
 import bcrypt
 
+#定義物件
 class user_info(BaseModel):
     account:str
     password:str
 
 app = FastAPI()
 
+#連接DB
 client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/")
 db = client[os.getenv("DATABASE_URL")]
+
+#選擇資料表
 user_collection = db["user"]
 collection = db["plc"]
 
+#API
 @app.get("/")
 async def DB_test():
     mytestData = { "temp": 25, "humidity": "78%" }

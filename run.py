@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import uvicorn
 
+#設定指令
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run the server in different modes.")

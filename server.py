@@ -23,17 +23,17 @@ user_collection = db["user"]
 collection = db["plc"]
 
 #API
-@app.get("/")
+@app.get("/api/test")
 async def DB_test():
     mytestData = { "temp": 25, "humidity": "78%" }
     await collection.insert_one(mytestData)
     return "Success"
 
-@app.get("/protected")
+@app.get("/api/protected")
 async def protected_route(user=Depends(get_current_user)):
     return {"message": "Hello!", "user": user}
 
-@app.post("/createUser")
+@app.post("/api/createUser")
 async def create_user(user:user_info):
     
     result = {"account":user.account,"password":bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt())}
@@ -41,20 +41,19 @@ async def create_user(user:user_info):
 
     return {"message": "新增成功"}
 
-@app.post("/login")
+@app.post("/api/login")
 async def login(user:user_info):
     user_in_db = await user_collection.find_one({"account": user.account.strip()})
     
     if not user_in_db:
-        raise HTTPException(status_code=404, detail="使用者不存在")
+        raise HTTPException(status_code=401, detail="帳密錯誤")
 
     # 檢查密碼
     if not bcrypt.checkpw(user.password.encode("utf-8"), user_in_db["password"]):
-        raise HTTPException(status_code=401, detail="密碼錯誤")
+        raise HTTPException(status_code=401, detail="帳密錯誤")
     
     # 產生 JWT token
     token = create_access_token({"account": user.account})
-    return {"access_token": token, "token_type": "bearer"}
-
-    return {"message": "登入成功"}
+    
+    return {"access_token": token}
     

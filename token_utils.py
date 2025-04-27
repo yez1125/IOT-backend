@@ -6,7 +6,7 @@ import os
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("JWT_SECRET", "defaultsecret")
+SECRET_KEY = os.getenv("JWT_SECRET")
 ALGORITHM = "HS256"
 EXPIRE_MINUTES = 30
 

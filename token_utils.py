@@ -7,8 +7,8 @@ import os
 load_dotenv()
 
 SECRET_KEY = os.getenv("JWT_SECRET")
-ALGORITHM = "HS256"
-EXPIRE_MINUTES = 30
+ALGORITHM = os.getenv("ALGORITHM")
+EXPIRE_MINUTES = int(os.getenv("EXPIRE_MINUTES"))
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()

@@ -24,7 +24,7 @@ class login_info(BaseModel):
     
 
 app = FastAPI()
-
+#CORS
 origins = [
     "*"
 ]

@@ -16,5 +16,6 @@ if __name__ == "__main__":
         load_dotenv("setting/.env.prod")
     else:
         load_dotenv("setting/.env.dev")
+
     
     uvicorn.run("server:app", host="127.0.0.1" , port=int(os.getenv("PORT")) , reload=True )

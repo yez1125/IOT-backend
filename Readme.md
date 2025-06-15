@@ -57,8 +57,10 @@ if successful, it will return
 
 ```json
 {
-  "account": "string",
-  "password": "string"
+    "account":"string",
+    "password":"string",
+    "func_permissions":"string"[],
+    "company":"string"
 }
 ```
 
@@ -69,6 +71,17 @@ if successful, it will return
   "message": "新增成功"
 }
 ```
+
+- modifyPermissions("http://13.211.240.55/api/modifyPermissions")
+
+```json
+{
+    "account":"string",
+    "func_permissions":"string"[]
+}
+```
+
+- getUsers("http://13.211.240.55/api/getUsers")
 
 ## Useful link
 

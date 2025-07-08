@@ -83,6 +83,57 @@ if successful, it will return
 
 - getUsers("http://13.211.240.55/api/getUsers")
 
+- createLab("http://13.211.240.55/api/createLab")
+
+```json
+{
+  "name": "string",
+  "description": "string",
+  "sensors": [
+    {
+      "name": "string",
+      "description": "string",
+      "company": "string",
+      "lab": "string"
+    },
+    {
+      "name": "string",
+      "description": "string",
+      "company": "string",
+      "lab": "string"
+    }
+  ],
+  "company": "string"
+}
+```
+
+- modifyLab("http://13.211.240.55/api/modifyLab")
+
+```json
+{
+  "id": "string",
+  "name": "string",
+  "description": "string",
+  "sensors": [
+    {
+      "name": "string",
+      "description": "string",
+      "company": "string",
+      "lab": "string"
+    },
+    {
+      "name": "string",
+      "description": "string",
+      "company": "string",
+      "lab": "string"
+    }
+  ],
+  "company": "string"
+}
+```
+
+- getLabs("http://13.211.240.55/api/getLabs")
+
 ## Useful link
 
 - [fastapi](https://ithelp.ithome.com.tw/articles/10320028)

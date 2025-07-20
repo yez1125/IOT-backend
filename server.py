@@ -81,7 +81,7 @@ user_collection = db["user"]
 lab_collection = db["lab"]
 collection = db["plc"]
 
-auth = ["create_user","modify_user","get_users","modify_lab","get_labs","view_data","control_machine","change_password"]
+func_auth = ["create_user","modify_user","get_users","modify_lab","get_labs","view_data","control_machine","change_password"]
 
 
 #API
@@ -105,8 +105,8 @@ async def create_user(user:user_info,auth=Depends(get_current_user)):
     if await user_collection.find_one({"account": user.account}):
             raise HTTPException(status_code=401, detail="帳號已存在")
     
-    for permission in user_info.func_permissions:
-        if not permission in auth:
+    for permission in user.func_permissions:
+        if not permission in func_auth:
             raise HTTPException(status_code=401, detail="權限格式錯誤")
     
     result = {"account":user.account,"password":bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()),"func_permissions":user.func_permissions,"company":user.company}
@@ -136,8 +136,8 @@ async def modify_permissions(info:modified_info,auth=Depends(get_current_user)):
     if not "superuser" in account["func_permissions"] and not "modify_user" in account["func_permissions"]:
             raise HTTPException(status_code=401, detail="權限不足")
     
-    for permission in modified_info.func_permissions:
-        if not permission in auth:
+    for permission in info.func_permissions:
+        if not permission in func_auth:
             raise HTTPException(status_code=401, detail="權限格式錯誤")
     
     await user_collection.update_one({"account":info.account},{"$set":{"func_permissions":info.func_permissions}})

@@ -1,3 +1,5 @@
 {
-    "files.autoSave": "afterDelay"
+    "files.autoSave": "afterDelay",
+    "python.interpreterPath": "./venv/Scripts/python.exe",
+    "python.defaultInterpreterPath": "./venv/Scripts/python.exe"
 }

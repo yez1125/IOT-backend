@@ -3,7 +3,7 @@ from pymodbus.transaction import ModbusAsciiFramer
 from pymodbus.exceptions import ModbusException
 
 class PLCConnection:
-    def __init__(self, framer=ModbusAsciiFramer, port = "COM7", stopbits = 1, bytesize = 7, parity = "E", baudrate = 9600):
+    def __init__(self, framer=ModbusAsciiFramer, port = "COM10", stopbits = 1, bytesize = 7, parity = "E", baudrate = 9600):
         self.framer = framer
         self.port = port
         self.stopbits = stopbits

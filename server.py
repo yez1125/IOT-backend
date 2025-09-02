@@ -10,6 +10,7 @@ import json
 from fastapi.middleware.cors import CORSMiddleware
 from bson import ObjectId
 
+
 #定義物件
 class user_info(BaseModel):
     account:str
@@ -24,6 +25,12 @@ class login_info(BaseModel):
 class modified_info(BaseModel):
     account:str
     func_permissions:list[str]
+
+class user_data(BaseModel):
+    account:str
+    func_permissions:list[str]
+    company:str
+
 
 class abox_info(BaseModel):
     CO:float
@@ -57,6 +64,12 @@ class lab_info(BaseModel):
     sensors:list[sensor_info]
     company:str    
 
+class delete_lab_info(BaseModel):
+    id:str
+
+class delete_user_info(BaseModel):
+    account:str
+  
 app = FastAPI()
 
 #CORS
@@ -84,11 +97,24 @@ collection = db["plc"]
 func_auth = ["create_user","modify_user","get_users","modify_lab","get_labs","view_data","control_machine","change_password"]
 
 
+@app.on_event("startup")
+async def ensure_superuser():
+    superuser = await user_collection.find_one()
+    if not superuser:
+        result = {
+            "account": os.getenv("SUPERUSER_ACCOUNT"),
+            "password": bcrypt.hashpw(os.getenv("SUPERUSER_PASSWORD").encode("utf-8"), bcrypt.gensalt()),
+            "func_permissions": ["superuser",],
+            "company": "super",
+            "update_time": datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
+            "delete_time": ""
+        }
+        await user_collection.insert_one(result)
+
+
 #API
 @app.get("/api/test")
 async def DB_test():
-    mytestData = { "temp": 25, "humidity": "78%" }
-    await collection.insert_one(mytestData)
     return "Success"
 
 @app.get("/api/protected")
@@ -109,7 +135,7 @@ async def create_user(user:user_info,auth=Depends(get_current_user)):
         if not permission in func_auth:
             raise HTTPException(status_code=401, detail="權限格式錯誤")
     
-    result = {"account":user.account,"password":bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()),"func_permissions":user.func_permissions,"company":user.company}
+    result = {"account":user.account,"password":bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()),"func_permissions":user.func_permissions,"company":user.company,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S"),"delete_time":""}
     await user_collection.insert_one(result)
     return {"message": "新增成功"}
 
@@ -119,6 +145,11 @@ async def login(user:login_info):
     
     if not user_in_db:
         raise HTTPException(status_code=401, detail="帳密錯誤")
+    
+    
+    
+    if len(user_in_db["delete_time"]):
+        raise HTTPException(status_code=401, detail="帳密錯誤")
 
     # 檢查密碼
     if not bcrypt.checkpw(user.password.encode("utf-8"), user_in_db["password"]):
@@ -126,12 +157,11 @@ async def login(user:login_info):
     
     # 產生 JWT token
     token = create_access_token({"account": user.account})
-    return {"access_token": token,"permissions":user_in_db["func_permissions"]}
+    return {"access_token": token,"permissions":user_in_db["func_permissions"],"company":user_in_db["company"]}
 
 @app.post("/api/modifyPermissions")
 async def modify_permissions(info:modified_info,auth=Depends(get_current_user)):
     account = await user_collection.find_one({"account": auth["account"]})
-    print("modify_user" in account["func_permissions"])
 
     if not "superuser" in account["func_permissions"] and not "modify_user" in account["func_permissions"]:
             raise HTTPException(status_code=401, detail="權限不足")
@@ -140,7 +170,7 @@ async def modify_permissions(info:modified_info,auth=Depends(get_current_user)):
         if not permission in func_auth:
             raise HTTPException(status_code=401, detail="權限格式錯誤")
     
-    await user_collection.update_one({"account":info.account},{"$set":{"func_permissions":info.func_permissions}})
+    await user_collection.update_one({"account":info.account},{"$set":{"func_permissions":info.func_permissions,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})
     
     return {"message": "修改成功"}
 
@@ -157,7 +187,7 @@ async def get_users(auth=Depends(get_current_user)):
         async for person in data:
             if "superuser" in person["func_permissions"]:
                  continue
-            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"]}
+            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
             result.append(personData)
             
         return result
@@ -165,11 +195,22 @@ async def get_users(auth=Depends(get_current_user)):
     if "get_users" in account["func_permissions"]:
         data = user_collection.find({"company":account["company"]})
         async for person in data:
-            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"]}
+            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
             result.append(personData)
             
         return result
-        
+
+@app.post("/api/deleteUser")
+async def delete_user(userinfo:delete_user_info,auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
+
+    if not "superuser" in account["func_permissions"] and not "modify_user" in account["func_permissions"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+    
+    await user_collection.update_one({"account":userinfo.account},{"$set":{"delete_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})
+    
+    return {"message": "刪除成功"} 
+       
 @app.post("/api/createLab")
 async def create_lab(lab:lab_data,auth=Depends(get_current_user)):
     account = await user_collection.find_one({"account": auth["account"]})
@@ -182,7 +223,7 @@ async def create_lab(lab:lab_data,auth=Depends(get_current_user)):
     
     sensors_dict_list = [s.dict() for s in lab.sensors]    
     
-    result = {"name":lab.name,"description":lab.description,"sensors":sensors_dict_list,"company":lab.company}
+    result = {"name":lab.name,"description":lab.description,"sensors":sensors_dict_list,"company":lab.company,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S"),"delete_time":""}
     await lab_collection.insert_one(result)
     return {"message": "新增成功"}
 
@@ -197,7 +238,7 @@ async def get_labs(auth=Depends(get_current_user)):
     if "superuser" in account["func_permissions"]:
         data = lab_collection.find()
         async for lab in data:
-            labData = {"id":str(lab["_id"]),"name":lab["name"],"description":lab["description"],"sensors":lab["sensors"],"company":lab["company"]}
+            labData = {"id":str(lab["_id"]),"name":lab["name"],"description":lab["description"],"sensors":lab["sensors"],"company":lab["company"],"update_time":lab["update_time"],"delete_time":lab["delete_time"]}
             result.append(labData)
             
         return result
@@ -205,7 +246,7 @@ async def get_labs(auth=Depends(get_current_user)):
     if "get_labs" in account["func_permissions"]:
         data = lab_collection.find({"company":account["company"]})
         async for lab in data:
-            labData = {"id":str(lab["_id"]),"name":lab["name"],"descrption":lab["descrption"],"sensors":lab["sensors"],"company":lab["company"]}
+            labData = {"id":str(lab["_id"]),"name":lab["name"],"descrption":lab["descrption"],"sensors":lab["sensors"],"company":lab["company"],"update_time":lab["update_time"],"delete_time":lab["delete_time"]}
             result.append(labData)
             
         return result
@@ -219,9 +260,20 @@ async def modify_lab(lab:lab_info,auth=Depends(get_current_user)):
     
     sensors_dict_list = [s.dict() for s in lab.sensors]
 
-    await lab_collection.update_one({"_id":ObjectId(lab.id)},{"$set":{"name":lab.name,"description":lab.description,"sensors":sensors_dict_list,"company":lab.company}})
+    await lab_collection.update_one({"_id":ObjectId(lab.id)},{"$set":{"name":lab.name,"description":lab.description,"sensors":sensors_dict_list,"company":lab.company,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})
     
-    return {"message": "修改成功"}   
+    return {"message": "修改成功"}
+
+@app.post("/api/deleteLab")
+async def delete_lab(lab:delete_lab_info,auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
+
+    if not "superuser" in account["func_permissions"] and not "modify_lab" in account["func_permissions"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+    
+    await lab_collection.update_one({"_id":ObjectId(lab.id)},{"$set":{"delete_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})
+    
+    return {"message": "刪除成功"}    
 
 @app.websocket("/ws/{machine}")
 async def websocket_endpoint(websocket: WebSocket,machine:str):

@@ -49,7 +49,9 @@ if successful, it will return
 
 ```json
 {
-  "access_token": "string"
+  "access_token": "string" ,
+  "func_permissions":"string"[],
+    "company":"string"
 }
 ```
 
@@ -82,6 +84,14 @@ if successful, it will return
 ```
 
 - getUsers("http://13.211.240.55/api/getUsers")
+
+- deleteUser("http://13.211.240.55/api/deleteUser")
+
+```json
+{
+  "account": "string"
+}
+```
 
 - createLab("http://13.211.240.55/api/createLab")
 
@@ -133,6 +143,14 @@ if successful, it will return
 ```
 
 - getLabs("http://13.211.240.55/api/getLabs")
+
+- deleteLab("http://13.211.240.55/api/deleteLab")
+
+```json
+{
+  "id": "string"
+}
+```
 
 ## Useful link
 

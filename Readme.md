@@ -152,6 +152,14 @@ if successful, it will return
 }
 ```
 
+- getRecentData("http://13.211.240.55/api/getRecentData?company_lab=str&machine=str&number=num")
+
+- searchData("http://13.211.240.55/api/searchData?company_lab=str&machine=str&start=str&end=str")
+
+### 時間格式為 YYYY-%m-%d %H:%M:%S 會回傳 xml 檔
+
+- 獲取即時資料("ws://13.211.240.55/ws/nccu_lab?token=str")
+
 ## Useful link
 
 - [fastapi](https://ithelp.ithome.com.tw/articles/10320028)

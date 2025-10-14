@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException, Depends,WebSocket,Query
+from fastapi import FastAPI,HTTPException, Depends,WebSocket,Query,Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import motor.motor_asyncio
@@ -10,22 +10,26 @@ from token_utils import create_access_token,decode_access_token
 from depend import get_current_user
 from datetime import datetime
 import json
+from typing import List, Optional,Dict
 from bson import ObjectId
 from starlette.websockets import WebSocketDisconnect
 from dateutil.relativedelta import relativedelta
 import openpyxl
-from typing import Dict
+from linebot import LineBotApi,WebhookHandler
+from linebot.models import TextSendMessage
+import random, string, time
+import httpx
+import base64
+import hmac
+import hashlib
 
-
-
-
-#定義物件
+#datatype
 class user_info(BaseModel):
     account:str
     password:str
     func_permissions:list[str]
     company:str
-
+    
 class login_info(BaseModel):
     account:str
     password:str
@@ -33,6 +37,7 @@ class login_info(BaseModel):
 class modified_info(BaseModel):
     account:str
     func_permissions:list[str]
+    company:str
 
 class user_data(BaseModel):
     account:str
@@ -81,6 +86,35 @@ class delete_lab_info(BaseModel):
 
 class delete_user_info(BaseModel):
     account:str
+
+class subscriber(BaseModel):
+    account: str
+    line_account:str
+    binding_code: str
+    binding_expiry: int
+    
+
+class threshold_data(BaseModel):
+    temperature: Optional[dict]
+    humidity: Optional[dict]
+    pm25: Optional[dict]
+    pm10: Optional[dict]
+    pm25_average: Optional[dict]
+    pm10_average: Optional[dict]
+    co2: Optional[dict]
+    tvoc: Optional[dict]
+    sensor:str
+    company:str
+    lab:str
+
+class threshold_info(BaseModel):
+    sensor:str
+    company:str
+    lab:str
+
+class company_info(BaseModel):
+    company:str
+    extra_auth:bool
   
 app = FastAPI()
 
@@ -97,18 +131,89 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-#連接DB
+#連DB
 client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/")
 db = client[os.getenv("DATABASE_URL")]
-MACHINE_KEYS: Dict[str, str] = json.loads(os.getenv("MACHINE_KEYS", "{}"))
 
-#選擇資料表
+#tool
+def generate_binding_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+async def reply_line_message(reply_token: str, message: str):
+    url = "https://api.line.me/v2/bot/message/reply"
+    headers = {
+        "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "replyToken": reply_token,
+        "messages": [{"type": "text", "text": message}]
+    }
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.post(url, headers=headers, json=payload)
+        resp.raise_for_status()
+        return resp.json()
+
+def verify_line_signature(body: bytes, signature: str) -> bool: 
+    hash = hmac.new(
+        LINE_CHANNEL_SECRET.encode("utf-8"),
+        body,
+        hashlib.sha256
+    ).digest()
+    calculated_signature = base64.b64encode(hash).decode()
+    return hmac.compare_digest(calculated_signature, signature)
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, List[WebSocket]] = {}
+
+    async def connect(self, websocket: WebSocket, company_lab: str):
+        if company_lab not in self.active_connections:
+            self.active_connections[company_lab] = []
+        self.active_connections[company_lab].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, company_lab: str):
+        if company_lab in self.active_connections:
+            if websocket in self.active_connections[company_lab]:
+                self.active_connections[company_lab].remove(websocket)
+            if not self.active_connections[company_lab]:
+                del self.active_connections[company_lab]
+
+    async def broadcast(self, message: dict, target_machine: str):
+        if target_machine not in self.active_connections:
+            return
+        dead_sockets = []
+        for connection in self.active_connections[target_machine]:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                dead_sockets.append(connection)
+        for ws in dead_sockets:
+            self.disconnect(ws, target_machine)
+
+#token
+MACHINE_KEYS: Dict[str, str] = json.loads(os.getenv("MACHINE_KEYS", "{}"))
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
+
+#module
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+handler = WebhookHandler(LINE_CHANNEL_SECRET)
+manager = ConnectionManager()
+
+#collection
+company_collection = db["company"]
 user_collection = db["user"]
 lab_collection = db["lab"]
+line_subscriber_collection=db["line_subscriber"]
+thresholds_collection=db["thresholds"]
 collection = db["plc"]
 
-func_auth = ["create_user","modify_user","get_users","modify_lab","get_labs","view_data","control_machine","change_password"]
+# todo: alarm/controlMachine/refreshToken/logout
 
+#auth
+func_auth = ["create_user","modify_user","get_users","modify_lab","get_labs","view_data","control_machine","change_password"]
+extra_func_auth = ["set_thresholds","modify_notification"]
 
 @app.on_event("startup")
 async def ensure_superuser():
@@ -119,11 +224,11 @@ async def ensure_superuser():
             "password": bcrypt.hashpw(os.getenv("SUPERUSER_PASSWORD").encode("utf-8"), bcrypt.gensalt()),
             "func_permissions": ["superuser",],
             "company": "super",
+            "allow_notify":True,
             "update_time": datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
             "delete_time": ""
         }
         await user_collection.insert_one(result)
-
 
 #API
 @app.get("/api/test")
@@ -134,21 +239,55 @@ async def DB_test():
 async def protected_route(user=Depends(get_current_user)):
     return {"message": "Hello!", "user": user}
 
+@app.post("/api/manageCompany")
+async def manage_company(info:company_info,auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
+    if not "superuser" in account["func_permissions"]:
+        raise HTTPException(status_code=401, detail="權限不足")
+    company_in_db = await company_collection.find_one({"company": info.company})
+    
+    if not company_in_db:
+        result = {"company":info.company,"extra_auth":info.extra_auth}
+        await company_collection.insert_one(result)
+        return {"message": "新增成功"}
+    else:
+        company_collection.update_one({"_id":company_in_db["_id"]},{"$set":{"extra_auth":info.extra_auth}})
+        return {"message": "修改成功"}
+    
+@app.get("/api/getCompany")
+async def get_company():
+    result = []
+    data = company_collection.find()
+    async for company in data:
+        result.append(company["company"])
+            
+    return result
+
 @app.post("/api/createUser")
 async def create_user(user:user_info,auth=Depends(get_current_user)):
     account = await user_collection.find_one({"account": auth["account"]})
 
     if not "superuser" in account["func_permissions"] and not "create_user" in account["func_permissions"]:
-            raise HTTPException(status_code=401, detail="權限不足")
+        raise HTTPException(status_code=401, detail="權限不足")
+    
+    if account["company"] != user.company and "create_user" in account["func_permissions"] :
+        raise HTTPException(status_code=401, detail="公司不一致")
     
     if await user_collection.find_one({"account": user.account}):
             raise HTTPException(status_code=401, detail="帳號已存在")
     
-    for permission in user.func_permissions:
-        if not permission in func_auth:
-            raise HTTPException(status_code=401, detail="權限格式錯誤")
+    company = await company_collection.find_one({"company": user.company})
+    if company["extra_auth"]:
+        for permission in user.func_permissions:
+            if not permission in func_auth and not permission in extra_func_auth :
+                raise HTTPException(status_code=401, detail="權限格式錯誤")
+    else:
+        for permission in user.func_permissions:
+            if not permission in func_auth :
+                raise HTTPException(status_code=401, detail="權限格式錯誤")
+        
     
-    result = {"account":user.account,"password":bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()),"func_permissions":user.func_permissions,"company":user.company,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S"),"delete_time":""}
+    result = {"account":user.account,"password":bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()),"func_permissions":user.func_permissions,"company":user.company,"allow_notify":False,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S"),"delete_time":""}
     await user_collection.insert_one(result)
     return {"message": "新增成功"}
 
@@ -159,8 +298,6 @@ async def login(user:login_info):
     if not user_in_db:
         raise HTTPException(status_code=401, detail="帳密錯誤")
     
-    
-    
     if len(user_in_db["delete_time"]):
         raise HTTPException(status_code=401, detail="帳密錯誤")
 
@@ -170,23 +307,34 @@ async def login(user:login_info):
     
     # 產生 JWT token
     token = create_access_token({"account": user.account})
-    return {"access_token": token,"permissions":user_in_db["func_permissions"],"company":user_in_db["company"]}
+    return {"access_token": token,"permissions":user_in_db["func_permissions"],"company":user_in_db["company"],"allow_notify":user_in_db["allow_notify"]}
 
 @app.post("/api/modifyPermissions")
 async def modify_permissions(info:modified_info,auth=Depends(get_current_user)):
     account = await user_collection.find_one({"account": auth["account"]})
+    company_auth = await company_collection.find_one({"company":info.company})
+    print(company_auth)
 
     if not "superuser" in account["func_permissions"] and not "modify_user" in account["func_permissions"]:
-            raise HTTPException(status_code=401, detail="權限不足")
+        raise HTTPException(status_code=401, detail="權限不足")
     
     for permission in info.func_permissions:
-        if not permission in func_auth:
-            raise HTTPException(status_code=401, detail="權限格式錯誤")
-    
-    await user_collection.update_one({"account":info.account},{"$set":{"func_permissions":info.func_permissions,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})
+        if company_auth["extra_auth"]:
+            if not permission in func_auth and not permission in extra_func_auth:
+                raise HTTPException(status_code=401, detail="權限格式錯誤")
+        else:
+            if not permission in func_auth:
+                raise HTTPException(status_code=401, detail="權限格式錯誤")
+        
+    if "superuser" in account["func_permissions"]:
+        await user_collection.update_one({"account":info.account},{"$set":{"func_permissions":info.func_permissions,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})
+    else:
+        if info.company != account["company"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+        await user_collection.update_one({"account":info.account},{"$set":{"func_permissions":info.func_permissions,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})
     
     return {"message": "修改成功"}
-
+    
 @app.get("/api/getUsers")
 async def get_users(auth=Depends(get_current_user)):
     account = await user_collection.find_one({"account": auth["account"]})
@@ -200,7 +348,7 @@ async def get_users(auth=Depends(get_current_user)):
         async for person in data:
             if "superuser" in person["func_permissions"]:
                  continue
-            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
+            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"allow_notify":person["allow_notify"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
             result.append(personData)
             
         return result
@@ -208,7 +356,7 @@ async def get_users(auth=Depends(get_current_user)):
     if "get_users" in account["func_permissions"]:
         data = user_collection.find({"company":account["company"]})
         async for person in data:
-            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
+            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"allow_notify":person["allow_notify"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
             result.append(personData)
             
         return result
@@ -358,8 +506,6 @@ async def search_data(
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
-    
-
 @app.get("/api/getRecentData")
 async def get_recent_data(
     company_lab: str ,
@@ -398,40 +544,137 @@ async def get_recent_data(
 
     return results
 
+@app.get("/api/getThresholds")
+async def get_thresholds(
+    sensor: str ,company: str ,lab: str ,
+    auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: Dict[str, List[WebSocket]] = {}
+    if not "superuser" in account["func_permissions"] and not "set_thresholds" in account["func_permissions"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+    
+    if company != account["company"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+    
+    threshold_in_db = await thresholds_collection.find_one({"company": company,"lab":lab,"sensor":sensor})
 
-    async def connect(self, websocket: WebSocket, company_lab: str):
-        if company_lab not in self.active_connections:
-            self.active_connections[company_lab] = []
-        self.active_connections[company_lab].append(websocket)
+    if not threshold_in_db:
+        return{"message":"無資料"}
+    
+    return {"company": company,"lab":lab,"sensor":sensor,"threshold":threshold_in_db["threshold"]}
+    
+@app.post("/api/setThresholds")
+async def set_thresholds(info: threshold_data,auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
 
-    def disconnect(self, websocket: WebSocket, company_lab: str):
-        if company_lab in self.active_connections:
-            if websocket in self.active_connections[company_lab]:
-                self.active_connections[company_lab].remove(websocket)
-            if not self.active_connections[company_lab]:
-                del self.active_connections[company_lab]
+    if not "superuser" in account["func_permissions"] and not "set_thresholds" in account["func_permissions"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+    
+    if info.company != account["company"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+    
+    lst = ["company","lab","sensor"]
+    update_dict = {k:v for k,v in info.dict().items() if v is not None and k not in lst}
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="提供上下限值")
+    
+    threshold_in_db = await thresholds_collection.find_one({"company": info.company,"lab":info.lab,"sensor":info.sensor})
+    if threshold_in_db:
+        await thresholds_collection.update_one({"_id":threshold_in_db["_id"]}, {"$set":update_dict}, upsert=True)
+        return {"message": "修改成功"}
+    else:    
+        await thresholds_collection.insert_one({"company": info.company,"lab":info.lab,"sensor":info.sensor,"threshold":update_dict})
+        return {"message": "新增成功"}
 
-    async def broadcast(self, message: dict, target_machine: str):
-        if target_machine not in self.active_connections:
-            return
-        dead_sockets = []
-        for connection in self.active_connections[target_machine]:
-            try:
-                await connection.send_json(message)
-            except Exception:
-                dead_sockets.append(connection)
-        for ws in dead_sockets:
-            self.disconnect(ws, target_machine)
+@app.delete("/api/deleteThresholds")
+async def delete_thresholds(info: threshold_info,auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
 
+    if not "superuser" in account["func_permissions"] and not "set_thresholds" in account["func_permissions"]:
+            raise HTTPException(status_code=401, detail="權限不足")
+    
+    threshold_in_db = await thresholds_collection.find_one({"company": info.company,"lab":info.lab,"sensor":info.sensor})
+    if threshold_in_db:
+        await thresholds_collection.delete_one({"_id":threshold_in_db["_id"]})
+        return {"message": "刪除成功"}
+    else:    
+        return {"message": "查無資料"}
+    
+@app.post("/api/generate_binding_code")
+async def generate_code(auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
+    if not account["allow_notify"]:
+        raise HTTPException(status_code=401, detail="權限不足")
+    line_subscriber_in_db = await line_subscriber_collection.find_one({"account":account["account"]})
+    
+    if not line_subscriber_in_db:
+        code = generate_binding_code()
+        expiry = int(time.time()) + 300  
+        result = {"account":account["account"],"binding_code":code,"binding_expiry":expiry}
+        await line_subscriber_collection.insert_one(result)
+        return {"status": "ok", "binding_code": code, "message": "請在5分鐘內於LINE輸入此綁定碼"}
+    
+    if  not line_subscriber_in_db["line_user_id"]:
+        code = generate_binding_code()
+        expiry = int(time.time()) + 300  
+        result = {"account":account["account"],"binding_code":code,"binding_expiry":expiry}
+        await line_subscriber_collection.insert_one(result)
+        return {"status": "ok", "binding_code": code, "message": "請在5分鐘內於LINE輸入此綁定碼"}
 
+    return { "message": "已綁定完成"}
 
-manager = ConnectionManager()
+@app.post("/webhook")
+async def webhook(request: Request):
+    signature = request.headers.get("X-Line-Signature", "")
+    body_bytes = await request.body()
 
+    if not verify_line_signature(body_bytes, signature):
+        raise HTTPException(status_code=400, detail="Invalid X-Line-Signature")
+    
+    body = await request.json()
+    events = body.get("events", [])
+    for event in events:
+        if event.get("type") != "message":
+            continue
+        message = event.get("message", {})
+        if message.get("type") != "text":
+            continue
 
+        text = message.get("text", "").strip()
+        # replyToken 用來回覆
+        reply_token = event.get("replyToken")
+        # 取得 line user id
+        source = event.get("source", {})
+        line_user_id = source.get("userId")
+
+        if not text or not reply_token or not line_user_id:
+            # 忽略不完整事件
+            continue
+
+        now_ts = int(time.time())
+        
+        query = {
+            "binding_code": text,
+            "binding_expiry": {"$gt": now_ts}
+        }
+        
+        update = {
+            "$set": {"line_user_id": line_user_id},
+            "$unset": {"binding_code": "", "binding_expiry": ""}
+        }
+        user = await line_subscriber_collection.find_one_and_update(query, update)
+        if user:
+            # 綁定成功
+            username = user["account"]
+            await reply_line_message(reply_token, f"{username} 已完成 LINE 綁定！")
+        else:
+            await reply_line_message(reply_token, "綁定碼錯誤或已過期，請確認是否在網站產生新綁定碼。")
+
+    # LINE 要求回 200
+    return {"status": "ok"}
+
+#socket
 @app.websocket("/ws/{company_lab}")
 async def websocket_endpoint(
     websocket: WebSocket,
@@ -507,11 +750,4 @@ async def websocket_endpoint(
     except Exception as e:
         print(f"WebSocket error: {e}")
         manager.disconnect(websocket, company_lab)
-
-
-    
-    
-
-        
-        
     

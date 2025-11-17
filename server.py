@@ -768,7 +768,7 @@ async def generate_code(auth=Depends(get_current_user)):
     if line_subscriber_in_db.get("line_user_id"):
         return { "message": "已綁定完成"}
 
-@app.post("/webhook")
+@app.post("/api/webhook")
 async def webhook(request: Request):
     signature = request.headers.get("X-Line-Signature", "")
     body_bytes = await request.body()

@@ -307,6 +307,17 @@ async def get_company():
             
     return result
 
+@app.get("/api/getCompanyByName")
+async def get_company_by_name(company:str,auth=Depends(get_current_user)):
+    account = await user_collection.find_one({"account": auth["account"]})
+    if not "superuser" in account["func_permissions"]:
+        raise HTTPException(status_code=401, detail="權限不足")
+    company_in_db = await company_collection.find_one({"company": company})
+    if not company_in_db:
+        return {"message": "查無此公司"}
+    
+    return {"company": company_in_db["company"],"extra_auth":company_in_db["extra_auth"],"IP":company_in_db["IP"]}
+
 @app.post("/api/createUser")
 async def create_user(user:user_info,auth=Depends(get_current_user)):
     account = await user_collection.find_one({"account": auth["account"]})
@@ -712,7 +723,7 @@ async def set_thresholds(info: threshold_data,auth=Depends(get_current_user)):
     
     threshold_in_db = await thresholds_collection.find_one({"company": info.company,"lab":info.lab,"sensor":info.sensor})
     if threshold_in_db:
-        await thresholds_collection.update_one({"_id":threshold_in_db["_id"]}, {"$set":update_dict}, upsert=True)
+        await thresholds_collection.update_one({"_id":threshold_in_db["_id"]}, {"$set":{"threshold":update_dict}}, upsert=True)
         return {"message": "修改成功"}
     else:    
         await thresholds_collection.insert_one({"company": info.company,"lab":info.lab,"sensor":info.sensor,"threshold":update_dict})
@@ -901,7 +912,7 @@ async def websocket_endpoint(
                     if alert_msg:
                         subscribers = await line_subscriber_collection.find({"company": company,"lab":lab}).to_list(None)
                         for sub in subscribers:
-                            if "line_user_id" in sub:
+                            if "line_user_id" in sub and lab in sub["lab"]:
                                 try:
                                     await line_bot_api.push_message(sub["line_user_id"], TextSendMessage(text=alert_msg))
                                 except Exception as e:

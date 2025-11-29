@@ -829,7 +829,7 @@ async def turn_on(target:machine_company,auth=Depends(get_current_user)):
         raise HTTPException(status_code=401, detail="公司不一致")
     
     company = await company_collection.find_one({"company":target.company})
-    address = company["IP"] + "/on"
+    address = "http://" + company["IP"] + "/on"
     async with httpx.AsyncClient() as client:
         response = await client.post(address)
         return response.json()
@@ -845,7 +845,7 @@ async def turn_on(target:machine_company,auth=Depends(get_current_user)):
         raise HTTPException(status_code=401, detail="公司不一致")
     
     company = await company_collection.find_one({"company":target.company})
-    address = company["IP"] + "/off"
+    address = "http://" + company["IP"] + "/off"
     async with httpx.AsyncClient() as client:
         response = await client.post(address)
         return response.json()

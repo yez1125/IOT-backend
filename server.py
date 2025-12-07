@@ -908,9 +908,11 @@ async def websocket_endpoint(
                     values = thresholds["threshold"]
                     report = analyze_data(data.get("values"), values)
                     alert_msg = format_alert(report, company_lab, sensor)
+                    print(alert_msg)
                     
                     if alert_msg:
                         subscribers = await line_subscriber_collection.find({"company": company,"lab":lab}).to_list(None)
+                        print(subscribers)
                         for sub in subscribers:
                             if "line_user_id" in sub and lab in sub["lab"]:
                                 try:

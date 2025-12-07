@@ -447,6 +447,9 @@ async def modify_permissions(info:modified_info,auth=Depends(get_current_user)):
         else:
             if not permission in func_auth:
                 raise HTTPException(status_code=401, detail="權限格式錯誤")
+            
+    if len(info.lab) == 0 :
+        raise HTTPException(status_code=401, detail="無實驗室資訊")
         
     if "superuser" in account["func_permissions"]:
         await user_collection.update_one({"account":info.account},{"$set":{"func_permissions":info.func_permissions,"lab":info.lab,"allow_notify":info.allow_notify,"update_time":datetime.now().strftime("%Y/%m/%d %H:%M:%S")}})

@@ -830,6 +830,7 @@ async def turn_on(target:machine_company,auth=Depends(get_current_user)):
     
     company = await company_collection.find_one({"company":target.company})
     address = company["IP"] + "/on"
+    print(address)
     async with httpx.AsyncClient() as client:
         response = await client.post(address)
         return response.json()

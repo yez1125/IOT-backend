@@ -473,7 +473,7 @@ async def get_users(auth=Depends(get_current_user)):
         async for person in data:
             if "superuser" in person["func_permissions"]:
                  continue
-            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"allow_notify":person["allow_notify"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
+            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"lab":person["lab"],"allow_notify":person["allow_notify"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
             result.append(personData)
             
         return result
@@ -481,7 +481,7 @@ async def get_users(auth=Depends(get_current_user)):
     if "get_users" in account["func_permissions"]:
         data = user_collection.find({"company":account["company"]})
         async for person in data:
-            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"allow_notify":person["allow_notify"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
+            personData = {"account":person["account"],"func_permissions":person["func_permissions"],"company":person["company"],"lab":person["lab"],"allow_notify":person["allow_notify"],"update_time":person["update_time"],"delete_time":person["delete_time"]}
             result.append(personData)
             
         return result

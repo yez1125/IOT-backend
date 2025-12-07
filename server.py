@@ -904,6 +904,7 @@ async def websocket_endpoint(
                 company,lab = company_lab.split("_")    
 
                 thresholds = await thresholds_collection.find_one({"company": company,"lab":lab,"sensor":sensor})
+                print(thresholds)
                 if thresholds:
                     values = thresholds["threshold"]
                     report = analyze_data(data.get("values"), values)
